@@ -46,6 +46,7 @@ This setup offers a **scalable, secure, and truly real-time** email listener ins
 * **✅ No Polling Required**
   Entirely event-driven—avoids exceeding Apps Script's time-based trigger quotas and ensures higher reliability.
 
+---
 
 ## 🧭 Workflow
 
@@ -54,6 +55,7 @@ graph TD;
   A[Gmail Inbox] --> |Gmail API watch| B[Gmail Server] --> |Publishes| C[Pub/Sub Topic] --> |Triggers| D[Cloud Run] --> |Call Web App| E["Apps Script <br>(Processes new email)"]
 ```
 
+---
 
 ## 🚀 Usage
 
@@ -71,6 +73,7 @@ Choose **Stop listening** from the custom menu. This will:
 * Call the Gmail API to **stop** the current `watch()`.
 * **Delete the scheduled trigger** associated with the listener.
 
+---
 
 ## 📁 Project Structure
 
@@ -94,6 +97,7 @@ Choose **Stop listening** from the custom menu. This will:
     └── package.json
 ```
 
+---
 
 ## ⚙️ Apps Script Setup
 
@@ -129,6 +133,7 @@ Before deploying the backend infrastructure, you must first set up and deploy yo
 
 > 🔐 You must also set a custom API key in `config.gs`, and store it in Secret Manager as `PUSH_PROXY_GAS_API_KEY`.
 
+---
 
 ## 🔧 Setup & Deployment
 
@@ -172,8 +177,10 @@ gcloud secrets create PUSH_PROXY_GAS_API_KEY --data-file=- <<< "your-secret-api-
 3. Run:
 
 ```powershell
-.\src\scripts\deploy-cloud-run.ps1
+powershell -ExecutionPolicy ByPass -File "path\to\scripts\deploy-cloud-run.ps1"
 ```
+
+> ⚠️ The `-ExecutionPolicy ByPass` flag is used to temporarily allow the script to run, even if your system's execution policy restricts unsigned scripts. This avoids permission errors without changing your system-wide settings.
 
 
 ### 🔍 What the deployment script does
@@ -197,13 +204,14 @@ gcloud secrets create PUSH_PROXY_GAS_API_KEY --data-file=- <<< "your-secret-api-
 
 After deployment, the script will output the **Cloud Run URL**—which is automatically subscribed to Gmail push events and forwards them to your Apps Script Web App.
 
+---
 
 ## 🧹 Teardown Instructions
 
 To clean up all deployed resources, you can run the provided PowerShell script:
 
 ```powershell
-.\src\scripts\teardown-cloud-run.ps1
+powershell -ExecutionPolicy ByPass -File "path\to\scripts\teardown-cloud-run.ps1"
 ```
 
 This script will reverse everything created during deployment.
@@ -242,6 +250,7 @@ gcloud secrets delete PUSH_PROXY_GAS_API_URL
 gcloud secrets delete PUSH_PROXY_GAS_API_KEY
 ```
 
+---
 
 ## 🔐 Security Practices
 
@@ -311,6 +320,7 @@ This architecture supports a wide range of realtime Gmail-driven workflows. Here
 * **🧹 Auto-cleanup of Inbox**
   Automatically delete or archive promotional/notification emails after recording them elsewhere (e.g., in a Sheet or database).
 
+---
 
 ## ⚠️ Why Not Use Apps Script as a Webhook Endpoint?
 

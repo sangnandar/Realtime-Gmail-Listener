@@ -47,6 +47,8 @@ foreach ($api in $requiredApis) {
 }
 
 # --- 1. Artifact Registry Setup ---
+# This step is optional — the "cloud-run-source-deploy" repository is automatically created 
+# when you deploy a Cloud Run service using the --source flag.
 Write-Host "`n--- Step 1: Artifact Registry Setup ---"
 gcloud artifacts repositories describe $artifactRegistryRepo --location=$artifactRegistryLocation --quiet | Out-Null 2>$null
 if ($LASTEXITCODE -ne 0) {

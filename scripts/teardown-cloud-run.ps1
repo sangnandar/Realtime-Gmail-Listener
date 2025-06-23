@@ -80,8 +80,32 @@ gcloud pubsub topics delete $pubsubTopic `
 # --- 6. Delete Artifact Registry Repository ---
 Write-Host "`n--- Step 6: Deleting Artifact Registry Repository ---"
 Write-Host "Deleting Artifact Registry repository '$artifactRegistryRepo' in '$artifactRegistryLocation'..."
-gcloud artifacts repositories delete $artifactRegistryRepo `
+$fullRepoPath = "$artifactRegistryLocation-docker.pkg.dev/$projectId/$artifactRegistryRepo/$cloudRunService"
+
+# Get package + version, of images
+$imageRefs = gcloud artifacts docker images list $fullRepoPath --format="value(PACKAGE, VERSION)" `
+    | ForEach-Object {
+        $parts = $_ -split "\s+"
+        if ($parts.Length -eq 2) {
+            $package = $parts[0]
+            $version = $parts[1]
+            if ($version.StartsWith("sha256:")) {
+            "${package}@${version}"
+            } else {
+            "${package}:${version}"
+            }
+        }
+    }
+
+# Delete images
+$imageRefs | ForEach-Object {
+    gcloud artifacts docker images delete $_ --quiet --delete-tags
+}
+
+# Delete the package itself
+gcloud artifacts packages delete $cloudRunService `
     --location=$artifactRegistryLocation `
+    --repository=$artifactRegistryRepo `
     --quiet
 
 # --- 7. Delete GCS Bucket for Cloud Build Artifacts ---
