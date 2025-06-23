@@ -1,0 +1,17 @@
+{
+  "name": "gmail-push-proxy",
+  "description": "A Cloud Run acts as proxy for Pub/Sub push notification to Apps Script",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "commonjs",
+  "dependencies": {
+    "@google-cloud/functions-framework": "^3.0.0",
+    "axios": "^1.6.0"
+  },
+  "scripts": {
+    "start": "functions-framework --target=pushProxy"
+  },
+  "engines": {
+    "node": "22"
+  }
+}
