@@ -7,7 +7,6 @@ This approach not only introduces **delay**, but also **exhausts Apps Script’s
 
 This project avoids polling entirely and achieves **instant responsiveness** using Gmail’s `watch()` API with Pub/Sub and Cloud Run.
 
-
 ### 🔧 Key Components
 
 * **Gmail API** – Watches for new messages and sends push notifications.
@@ -19,6 +18,7 @@ This project avoids polling entirely and achieves **instant responsiveness** usi
 
 This setup offers a **scalable, secure, and truly real-time** email listener inside the Google ecosystem.
 
+---
 
 ## ✨ Features
 
@@ -286,6 +286,7 @@ This project follows several best practices to ensure secure handling of credent
 * Only the Gmail account that owns the script can initiate or stop the Gmail `watch()` subscription.
 * Pub/Sub topics are configured to only accept messages from Gmail’s **verified service account** (`gmail-api-push@system.gserviceaccount.com`).
 
+---
 
 ## 📌 Real-World Use Cases
 
