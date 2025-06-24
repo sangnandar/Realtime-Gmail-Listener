@@ -93,8 +93,7 @@ Choose **Stop listening** from the custom menu. This will:
 └── scripts/
     ├── config.ps1            # PowerShell setup for config and secrets
     ├── deploy-cloud-run.ps1  # Deploy Cloud Run service and supporting infra
-    ├── teardown-cloud-run.ps1# Full teardown of resources
-    └── package.json
+    └── teardown-cloud-run.ps1# Full teardown of resources
 ```
 
 ---
@@ -109,12 +108,13 @@ Before deploying the backend infrastructure, you must first set up and deploy yo
 2. Go to **Project Settings** → click **"Change project"** under Google Cloud Platform (GCP) Project.
 3. Link it to a new or existing GCP project.
 4. Enable the following APIs in the linked GCP project:
-   - Gmail API - obviously
+   - Gmail API – obviously
    - Cloud Build API – used to build and deploy containers
    - Artifact Registry API – used to store Docker images
    - Cloud Pub/Sub API – used to receive Gmail push notifications
    - Cloud Run API – used to deploy and manage the Cloud Run service
    - Eventarc API – used to create triggers from Pub/Sub to Cloud Run
+   - Secret Manager API – used to securely store and access sensitive information
 
 ### 2. Enable Gmail API in Apps Script Services
 1. In the Apps Script editor, click + Services (left sidebar).
@@ -163,7 +163,7 @@ You must manually set up the following **Secret Manager entries**, as they conta
 #### To add these secrets:
 
 ```bash
-gcloud secrets create PUSH_PROXY_GAS_API_URL --data-file=- <<< "https://script.google.com/macros/s/your-script-id/exec"
+gcloud secrets create PUSH_PROXY_GAS_API_URL --data-file=- <<< "https://script.google.com/macros/s/your-script-deployment-id/exec"
 gcloud secrets create PUSH_PROXY_GAS_API_KEY --data-file=- <<< "your-secret-api-key"
 ```
 
@@ -259,7 +259,7 @@ This project follows several best practices to ensure secure handling of credent
 ### ✅ Secrets Are Never Hardcoded
 
 * Sensitive data such as the Apps Script Web App URL and API key are stored in **Secret Manager**, not in source files.
-* The Cloud Run service retrieves secrets **at runtime** using the Google Cloud SDK, ensuring separation of code and credentials.
+* These secrets are injected into the Cloud Run service at deploy time using the --set-secrets flag, ensuring a clean separation between code and credentials.
 
 ### ✅ Principle of Least Privilege
 
@@ -283,7 +283,8 @@ This project follows several best practices to ensure secure handling of credent
 
 ### ✅ Controlled Gmail Watch Access
 
-* Only the Gmail account that owns the script can initiate or stop the Gmail `watch()` subscription.
+* For consumer Gmail accounts, only the account that owns the Apps Script project can initiate or stop the Gmail `watch()` subscription.
+* For Google Workspace accounts, the `watch()` is managed via the Gmail API using a service account with **domain-wide delegation**, so the account that initiates or stops the watch does not need to be the same account that owns the Apps Script project.
 * Pub/Sub topics are configured to only accept messages from Gmail’s **verified service account** (`gmail-api-push@system.gserviceaccount.com`).
 
 ---
@@ -334,5 +335,11 @@ Apps Script **cannot act as a webhook endpoint** for services like Pub/Sub due t
 
 > 💡 A workaround can be made so that Pub/Sub only sends **one push and never retries**, but this makes the workflow **unreliable**—you’d lose guaranteed delivery in case of failures.
 
-This redirect behavior is **intentional for security reasons**. Platforms like **Zapier** do follow redirects and can work with Apps Script endpoints, but for **Pub/Sub**, a proxy (like **Cloud Run**) is required for reliable delivery.
+This redirect behavior is **intentional for security reasons**. Platforms like Zapier, GoHighLevel, etc., do follow redirects and can work with Apps Script endpoints, but for **Pub/Sub**, a proxy (such as **Cloud Run**) is required for reliable delivery.
 
+
+## 💰 Cost Analysis
+
+For typical usage—such as receiving **1,000 emails per day**—the cost is minimal and often stays within GCP’s free tier. Services like **Cloud Run**, **Pub/Sub**, **Eventarc**, and **Secret Manager** all have generous free quotas. Gmail push notifications are lightweight, so Pub/Sub and Eventarc costs remain near zero. Occasional Cloud Build usage for deployment and small artifact storage adds negligible cost.
+
+In most cases, total monthly cost will be **under \$1–2 USD**, or even free if you remain within free tier limits.
