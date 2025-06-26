@@ -1,4 +1,4 @@
-# **Realtime Gmail Listener with Cloud Run and Apps Script**
+# Realtime Gmail Listener with Cloud Run and Apps Script
 
 This project provides a **realtime, serverless solution** to monitor Gmail for new messages using **push notifications** instead of traditional polling. It leverages **Google Cloud Pub/Sub** to receive events instantly when a new email arrives, and routes them through **Cloud Run** to **Apps Script**, where your custom processing logic (e.g., updating Google Sheets) runs.
 
