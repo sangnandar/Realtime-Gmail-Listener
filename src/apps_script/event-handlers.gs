@@ -2,6 +2,12 @@
  **               TRIGGER/EVENT HANDLERS              **
  *******************************************************/
 
+/**
+ * POST handler for task "processNewEmails".
+ * 
+ * @param {object} data - The data object from POST.
+ * @returns {object} JSON response.
+ */
 function processNewEmails(data)
 {
   const requiredFields = [
@@ -29,67 +35,33 @@ function processNewEmails(data)
   const dataMap = new SheetLayout(sheet).getDataMap();
   const lastRow = sheet.getLastRow();
 
-  const values = emails.map(email => [
-    getHeader(email, 'Date'),
-    getHeader(email, 'From'),
-    getHeader(email, 'Subject')
-  ]);
-  sheet.getRange(lastRow + 1, dataMap.emailDate, values.length, values[0].length).setValues(values);
+  const values = emails.map(email => ({
+    date: new Date(getHeader(email, 'Date')),
+    from: getHeader(email, 'From'),
+    subject: getHeader(email, 'Subject')
+  }));
+
+  // Update sheet
+  sheet.getRange(lastRow + 1, dataMap.emailDate, values.length, Object.keys(values[0]).length).setValues(
+    values.map(v => [v.date, v.from, v.subject])
+  );
+
+  let message = '';
+  values.forEach(v => {
+    message += `Date: ${v.date}\nFrom: ${v.from}\nSubject: ${v.subject}\n\n`;
+  });
+
+  // Send Telegram notification
+  const token = getSecret('TELEGRAM_BOT_TOKEN');
+  const chatId = getSecret('TELEGRAM_CHAT_ID');
+  sendTelegramMessage(token, chatId, message);
+
+  // Send Slack notification
+  const url = getSecret('SLACK_API_URL');
+  sendSlackMessage(url, message);
 
   return {
     success: true,
     message: MESSAGES.processSuccess
   };
-}
-
-/**
- * Pull all Gmail messages arrived since the given `historyId`.
- * 
- * @param {string} historyId - The Gmail history ID to start from.
- * @returns {object[]} The array of Gmail message objects.
- */
-function pullEmailsSince(historyId)
-{
-  let pageToken = null;
-  let lastHistoryId = historyId;
-  const emails = [];
-
-  do {
-    const response = Gmail.Users.History.list('me', {
-      startHistoryId: historyId,
-      pageToken: pageToken,
-      historyTypes: ['messageAdded']
-    });
-
-    const history = response.history || [];
-    for (const record of history) {
-      const added = record.messages || [];
-      for (const msg of added) {
-        const email = Gmail.Users.Messages.get('me', msg.id);
-        emails.push(email);
-      }
-    }
-
-    if (response.historyId) lastHistoryId = response.historyId;
-    pageToken = response.nextPageToken;
-
-  } while (pageToken);
-
-  SCRIPT_PROPS.setProperty('lastHistoryId', lastHistoryId);
-
-  return emails;
-}
-
-/**
- * Get a specific header value from a message.
- * 
- * @param {object} message - The Gmail message object.
- * @param {string} headerName - The header name (e.g., "Subject").
- * @returns {string} The header value or empty string.
- */
-function getHeader(message, headerName)
-{
-  const headers = message.payload.headers || [];
-  const match = headers.find(header => header.name.toLowerCase() === headerName.toLowerCase());
-  return match ? match.value : '';
 }

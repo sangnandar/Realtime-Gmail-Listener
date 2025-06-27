@@ -131,7 +131,7 @@ Before deploying the backend infrastructure, you must first set up and deploy yo
 4. Click **Deploy** and copy the **Web App URL**.
 5. Set this value in Secret Manager as `PUSH_PROXY_GAS_API_URL`.
 
-> 🔐 You must also set a custom API key in `config.gs`, and store it in Secret Manager as `PUSH_PROXY_GAS_API_KEY`.
+> 🔐 You must also create a custom API key and store it in Secret Manager as `PUSH_PROXY_GAS_API_KEY`.
 
 ---
 
@@ -158,7 +158,7 @@ You must manually set up the following **Secret Manager entries**, as they conta
 | Secret Name              | Description                                                   |
 | ------------------------ | ------------------------------------------------------------- |
 | `PUSH_PROXY_GAS_API_URL` | The **Apps Script Web App URL** that Cloud Run will call      |
-| `PUSH_PROXY_GAS_API_KEY` | The **API key** to authenticate requests (set in `config.gs`) |
+| `PUSH_PROXY_GAS_API_KEY` | The **API key** to authenticate requests                      |
 
 #### To add these secrets:
 

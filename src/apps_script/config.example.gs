@@ -51,12 +51,12 @@ const SHEETCONFIG = readOnlyObject({
 
 // === START: Configuration for GCP Project ===
 const PROJECT_ID = 'YOUR_PROJECT_ID';
-const PUBSUB_TOPIC = 'YOUR_PUBSUB_TOPIC';
+const PUBSUB_TOPIC = 'gmail-push-proxy-pubsub';
 // === END: Configuration for GCP Project ===
 
 // === START: Configuration for HTTP Requests ===
-const apiKey = 'YOUR_API_KEY'; // static key implementation
-const apiHandlers = {
+const APIKEY_STORE_KEY = 'PUSH_PROXY_GAS_API_KEY';
+const API_HANDLERS = {
   processNewEmails
 };
 // === END: Configuration for HTTP Requests ===

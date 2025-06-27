@@ -22,67 +22,24 @@ function onOpen()
  */
 function doPost(e)
 {
+  console.log('doPost called with data:', e.postData.contents);
   const body = JSON.parse(e.postData.contents);
 
-  if (body.apiKey !== apiKey) {
+  if (body.apiKey !== getSecret(APIKEY_STORE_KEY)) {
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       message: MESSAGES.invalidApiKey
     })).setMimeType(ContentService.MimeType.JSON);
   }
 
-  if (!isFunction(apiHandlers[body.task])) {
+  if (!isFunction(API_HANDLERS[body.task])) {
     return ContentService.createTextOutput(JSON.stringify({
       success: false,
       message: MESSAGES.invalidTask
     })).setMimeType(ContentService.MimeType.JSON);
   }
 
-  const response = apiHandlers[body.task](body.data);
+  const response = API_HANDLERS[body.task](body.data);
+  console.log('Response from handler:', response);  
   return ContentService.createTextOutput(JSON.stringify(response)).setMimeType(ContentService.MimeType.JSON);
-}
-
-/**
- * .watch() is expired at the given expiration time (in milliseconds UTC).
- * This installable trigger re-initiate a new .watch() 1 hour before that expiration time.
- * 
- * @param {GoogleAppsScript.Events.TimeDriven} e - Event object.
- * @returns {void}
- */
-function initWatch(e)
-{
-  const resource = {
-    topicName: `projects/${PROJECT_ID}/topics/${PUBSUB_TOPIC}`,
-    labelIds: ['INBOX'],
-  };
-  const response = Gmail.Users.watch(resource, 'me');
-
-  // Schedule re-init 1 hour before expiration
-  const expiration = Number(response.expiration); // milliseconds UTC
-  const reinitAt = expiration - 60 * 60 * 1000; // 1 hour before
-
-  scheduleAnotherRunAt('initWatch', reinitAt);
-
-  if (e && e.triggerUid) { // safeguard against manual-run either from editor, custom-menu, or button
-    deleteTriggerByUid(e.triggerUid); // this instance of trigger
-  }
-
-  SCRIPT_PROPS.setProperty('IsWatch', 'true');
-}
-
-/**
- * Stop the current .watch().
- * 
- * @returns {void}
- */
-function stopWatch()
-{
-  Gmail.Users.stop('me');
-
-  const funcName = 'initWatch';
-  const trigger = ScriptApp.getProjectTriggers().find(t => t.getHandlerFunction() === funcName);
-  if (trigger) ScriptApp.deleteTrigger(trigger);
-
-  SCRIPT_PROPS.setProperty('IsWatch', 'false');
-  SCRIPT_PROPS.deleteProperty('lastHistoryId');
 }
