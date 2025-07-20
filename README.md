@@ -123,7 +123,7 @@ Before deploying the backend infrastructure, you must first set up and deploy yo
 
 ### 3. Deploy Apps Script as Web App
 
-1. Click **Deploy** → **Manage deployments**
+1. Click **Deploy** → **New deployment**
 2. Choose **Web App** as the deployment type
 3. Set:
    - **Execute as:** Me

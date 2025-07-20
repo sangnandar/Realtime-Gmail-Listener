@@ -135,59 +135,6 @@ function isObject(obj) {
 }
 
 /**
- * .watch() is expired at the given expiration time (in milliseconds UTC).
- * This installable trigger re-initiate a new .watch() 1 hour before that expiration time.
- * 
- * @param {GoogleAppsScript.Events.TimeDriven} e - Event object.
- * @returns {void}
- */
-function initWatch(e)
-{
-  const resource = {
-    topicName: `projects/${PROJECT_ID}/topics/${PUBSUB_TOPIC}`,
-    labelIds: ['INBOX'],
-  };
-  const response = Gmail.Users.watch(resource, 'me');
-
-  // Schedule re-init 1 hour before expiration
-  const expiration = Number(response.expiration); // milliseconds UTC
-  const reinitAt = expiration - 60 * 60 * 1000; // 1 hour before
-
-  scheduleAnotherRunAt('initWatch', reinitAt);
-
-  if (e && e.triggerUid) { // safeguard against manual-run either from editor, custom-menu, or button
-    deleteTriggerByUid(e.triggerUid); // this instance of trigger
-  }
-
-  SCRIPT_PROPS.setProperty('IsWatch', 'true');
-  UI
-    .createMenu('Custom Menu')
-      .addItem('Stop listening', 'stopWatch')
-    .addToUi();
-}
-
-/**
- * Stop the current .watch().
- * 
- * @returns {void}
- */
-function stopWatch()
-{
-  Gmail.Users.stop('me');
-
-  const funcName = 'initWatch';
-  const trigger = ScriptApp.getProjectTriggers().find(t => t.getHandlerFunction() === funcName);
-  if (trigger) ScriptApp.deleteTrigger(trigger);
-
-  SCRIPT_PROPS.setProperty('IsWatch', 'false');
-  SCRIPT_PROPS.deleteProperty('lastHistoryId');
-  UI
-    .createMenu('Custom Menu')
-      .addItem('Start listening', 'initWatch')
-    .addToUi();
-}
-
-/**
  * Schedule another run of a function at T timestamp.
  * 
  * @param {string} functionName - The name of the function to be triggered.
@@ -217,44 +164,6 @@ function deleteTriggerByUid(uid)
       break;
     }
   }
-}
-
-/**
- * Pull all Gmail messages arrived since the given `historyId`.
- * 
- * @param {string} historyId - The Gmail history ID to start from.
- * @returns {object[]} The array of Gmail message objects.
- */
-function pullEmailsSince(historyId)
-{
-  let pageToken = null;
-  let lastHistoryId = historyId;
-  const emails = [];
-
-  do {
-    const response = Gmail.Users.History.list('me', {
-      startHistoryId: historyId,
-      pageToken: pageToken,
-      historyTypes: ['messageAdded']
-    });
-
-    const history = response.history || [];
-    for (const record of history) {
-      const added = record.messages || [];
-      for (const msg of added) {
-        const email = Gmail.Users.Messages.get('me', msg.id);
-        emails.push(email);
-      }
-    }
-
-    if (response.historyId) lastHistoryId = response.historyId;
-    pageToken = response.nextPageToken;
-
-  } while (pageToken);
-
-  SCRIPT_PROPS.setProperty('lastHistoryId', lastHistoryId);
-
-  return emails;
 }
 
 /**
@@ -346,4 +255,17 @@ function sendSlackMessage(url, message)
   if (code !== 200) {
     console.error(`Slack error ${code}: ${response.getContentText()}`);
   }
+}
+
+/**
+ * Appends a message to the end of a log file stored in Google Drive.
+ *
+ * @param {string} message - The message to append to the log file.
+ * @returns {void}
+ */
+function appendToLogFile(message)
+{
+  const file = DriveApp.getFileById(LOGFILE_ID);
+  const existingContent = file.getBlob().getDataAsString();
+  file.setContent(existingContent + message + '\n');
 }

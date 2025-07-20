@@ -19,6 +19,7 @@ try {
 const SS = SpreadsheetApp.getActiveSpreadsheet();
 const SCRIPT_PROPS = PropertiesService.getScriptProperties();
 
+const LOGFILE_ID = '1uEwHW9fmTX7UFE3AnkBoBI2N4Jz8fq-9';
 
 // === START: Configuration for Sheets ===
 
@@ -63,6 +64,7 @@ const API_HANDLERS = {
 
 const MESSAGES = readOnlyObject({
   configError: `There is a problem with the configuration. Please contact the developer.`,
+  noHistory: 'Cannot access history list.',
   noProcess: `No new email to process.`,
   processSuccess: `Data processed successfully.`,
   invalidApiKey: `API key is invalid!`,
